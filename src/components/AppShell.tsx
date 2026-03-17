@@ -13,21 +13,14 @@ import { CyclesTab } from "./tabs/CyclesTab";
 import { ProfileTab } from "./tabs/ProfileTab";
 import { PricingTab } from "./PricingTab";
 import { ReferralPage } from "./ReferralPage";
-import { SubscriptionProvider, useSubscriptionContext } from "@/hooks/SubscriptionContext";
-
 export function AppShell() {
-  return (
-    <SubscriptionProvider>
-      <AppShellInner />
-    </SubscriptionProvider>
-  );
+  return <AppShellInner />;
 }
 
 function AppShellInner() {
     const { state, dispatch } = useApp();
     const [showPricing, setShowPricing] = useState(false);
     const [showReferral, setShowReferral] = useState(false);
-    const { isPremium, loading: subLoading } = useSubscriptionContext();
 
   const tabs = [
     { id: "dashboard", label: "Today", icon: CalendarDays, component: Dashboard },
@@ -171,15 +164,6 @@ function AppShellInner() {
                     </button>
                   );
                 })}
-                {!subLoading && !isPremium && (
-                  <button
-                    onClick={() => setShowPricing(true)}
-                    className="flex flex-col items-center gap-1 transition-all flex-1 py-2.5 rounded-xl text-amber-500 hover:text-amber-600"
-                  >
-                      <Crown className="w-5 h-5" />
-                      <span className="text-[10px] font-medium uppercase tracking-wide">Pro</span>
-                  </button>
-                )}
             </div>
           </div>
       </div>

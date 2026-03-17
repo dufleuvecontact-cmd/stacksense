@@ -9,14 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Plus, Search, Pill, FlaskConical, ChevronRight, Pause, Play, Trash2, Clock, ExternalLink, ShieldAlert, ShieldCheck, ArrowLeft, Layers, Sparkles, ClipboardList } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AddItemModal } from "@/components/AddItemModal";
-import { useSubscriptionContext as useSubscription } from "@/hooks/SubscriptionContext";
 import { toast } from "sonner";
 
 const REMINDER_WINDOW_OPTIONS = ["Morning", "Midday", "Evening", "Bedtime"] as const;
 
 export function LogTab({ onShowPricing }: { onShowPricing?: () => void }) {
   const { state, dispatch } = useApp();
-  const { isPremium } = useSubscription();
   const [selectedItem, setSelectedItem] = useState<StackItem | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

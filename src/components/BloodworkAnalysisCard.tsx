@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { useApp } from "@/lib/store";
 import { supabase } from "@/lib/supabase";
-import { useSubscriptionContext as useSubscription } from "@/hooks/SubscriptionContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +38,8 @@ export function BloodworkAnalysisCard({
 }: {
   onShowPricing?: () => void;
 }) {
-  const { isPremium, userId } = useSubscription();
+  const { state } = useApp();
+  const userId = state.profile?.userId;
   const fileRef = useRef<HTMLInputElement>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
@@ -97,11 +98,7 @@ export function BloodworkAnalysisCard({
       return;
     }
 
-    if (!isPremium && freeUsed >= FREE_QUOTA) {
-      toast.error(`Free quota reached (${FREE_QUOTA} analyses). Upgrade to Premium for unlimited.`);
-      onShowPricing?.();
-      return;
-    }
+
 
     setAnalyzing(true);
     try {
@@ -112,7 +109,6 @@ export function BloodworkAnalysisCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
-          isPremium,
           date: new Date().toISOString().split("T")[0],
           rawText,
           userContext: {},
@@ -121,11 +117,7 @@ export function BloodworkAnalysisCard({
 
       const data = await res.json();
 
-      if (res.status === 402) {
-        toast.error(data.message || "Free quota exceeded");
-        onShowPricing?.();
-        return;
-      }
+
 
       if (!res.ok || data.error) {
         throw new Error(data.error || "Analysis failed");
@@ -143,7 +135,6 @@ export function BloodworkAnalysisCard({
 
       setAnalyses((prev) => [newAnalysis, ...prev]);
       setExpanded(newAnalysis.id);
-      if (!isPremium) setFreeUsed((u) => u + 1);
       toast.success("Bloodwork analyzed successfully");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Analysis failed";
@@ -154,8 +145,7 @@ export function BloodworkAnalysisCard({
     }
   };
 
-  const canAnalyze = isPremium || freeUsed < FREE_QUOTA;
-  const remainingFree = Math.max(0, FREE_QUOTA - freeUsed);
+  const canAnalyze = true;
 
   return (
     <div className="space-y-4">

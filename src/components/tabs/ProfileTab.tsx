@@ -26,7 +26,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { useSubscriptionContext as useSubscription } from "@/hooks/SubscriptionContext";
 import { BloodworkAnalysisCard } from "@/components/BloodworkAnalysisCard";
 import { ProtocolLibrary } from "@/components/ProtocolLibrary";
 
@@ -41,8 +40,6 @@ export function ProfileTab({
   const isDark = state.theme === "dark";
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState(state.profile);
-  const { isPremium, subscription, openPortal } = useSubscription();
-  const [portalLoading, setPortalLoading] = useState(false);
   const [showProtocols, setShowProtocols] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const currentStack = state.profile.currentStack || [];
@@ -61,28 +58,12 @@ export function ProfileTab({
     toast.success(state.theme === "light" ? "Dark mode enabled" : "Light mode enabled");
   };
 
-  const handleOpenPortal = async () => {
-    if (!isPremium) { onShowPricing?.(); return; }
-    setPortalLoading(true);
-    try {
-      await openPortal();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Could not open billing portal";
-      toast.error(msg.includes("No such customer") ? "Billing portal unavailable — contact support." : msg);
-    } finally {
-      setPortalLoading(false);
-    }
-  };
+
 
   const parseArrayValue = (value?: string) =>
     (value || "").split(/[,;|]/).map((v) => v.trim()).filter(Boolean);
 
   const handleImportClick = () => {
-    if (!isPremium) {
-      toast.error("Spreadsheet import is premium only.");
-      onShowPricing?.();
-      return;
-    }
     fileInputRef.current?.click();
   };
 
@@ -197,26 +178,6 @@ export function ProfileTab({
       title: "Membership",
       items: [
         {
-          icon: Crown,
-          label: isPremium ? "Premium Active" : "Upgrade to Premium",
-          sublabel: isPremium && subscription?.current_period_end
-            ? `Renews ${new Date(subscription.current_period_end).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
-            : isPremium && subscription?.cancel_at_period_end
-            ? "Cancels at period end"
-            : "Unlock all features · $7.99/mo",
-          value: isPremium ? "Active" : "$7.99/mo",
-          accent: true,
-          onClick: isPremium ? handleOpenPortal : () => onShowPricing?.(),
-        },
-        {
-          icon: CreditCard,
-          label: "Billing & Subscription",
-          sublabel: "Manage plan, invoices, and payment",
-          value: portalLoading ? "Loading…" : isPremium ? "Manage" : "—",
-          onClick: isPremium && !portalLoading ? handleOpenPortal : () => {},
-          disabled: !isPremium || portalLoading,
-        },
-        {
           icon: Gift,
           label: "Referral Program",
           sublabel: "Earn 1 free month per friend",
@@ -231,34 +192,31 @@ export function ProfileTab({
         {
           icon: Database,
           label: "Cloud Sync & Backup",
-          sublabel: isPremium ? "Syncing automatically" : "Premium feature",
-          value: isPremium ? "Active" : "Locked",
+          sublabel: "Syncing automatically",
+          value: "Active",
           onClick: () => {
-            if (!isPremium) { toast.error("Cloud Sync is a Premium feature."); onShowPricing?.(); return; }
             toast.success("All data is securely backed up.");
           },
         },
         {
           icon: FileText,
           label: "Stack PDF Export",
-          sublabel: isPremium ? "Export your complete stack" : "Premium feature",
-          value: isPremium ? "Export" : "Locked",
+          sublabel: "Export your complete stack",
+          value: "Export",
           onClick: () => {
-            if (!isPremium) { toast.error("Stack PDF is a Premium feature."); onShowPricing?.(); return; }
             exportStackToPDF();
           },
-          disabled: !isPremium,
+          disabled: false,
         },
         {
           icon: Database,
           label: "Stack CSV Import",
-          sublabel: isPremium ? "Import stack from spreadsheet" : "Premium feature",
-          value: isPremium ? "Import" : "Locked",
+          sublabel: "Import stack from spreadsheet",
+          value: "Import",
           onClick: () => {
-            if (!isPremium) { toast.error("CSV import is a Premium feature."); onShowPricing?.(); return; }
             handleImportClick();
           },
-          disabled: !isPremium,
+          disabled: false,
         },
         {
           icon: FileText,
@@ -367,11 +325,6 @@ export function ProfileTab({
             <div className="w-16 h-16 rounded-full bg-teal/10 dark:bg-teal/20 border-2 border-teal/30 flex items-center justify-center">
               <User className="w-7 h-7 text-teal" />
             </div>
-            {isPremium && (
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
-                <Crown className="w-2.5 h-2.5 text-white" />
-              </div>
-            )}
           </div>
 
           {/* Identity */}
@@ -388,11 +341,6 @@ export function ProfileTab({
               </button>
             </div>
             <p className="text-[12px] text-teal font-medium mt-0.5">Level 4 · Optimized</p>
-            {isPremium && (
-              <span className="inline-block mt-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded-full border border-amber-200/60 dark:border-amber-800/40">
-                Premium Member
-              </span>
-            )}
           </div>
         </div>
       </div>
