@@ -38,12 +38,10 @@ const FORMS = ["Capsule", "Tablet", "Powder", "Liquid", "Softgel", "Injection", 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const TIMES = ["Morning", "Afternoon", "Evening", "Bedtime", "Pre-workout", "Post-workout"];
 
-import { useSubscriptionContext as useSubscription } from "@/hooks/SubscriptionContext";
 import { calculateEstimatedDose, DoseRecommendation } from "@/lib/dosing";
 
 export function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
     const { state, dispatch } = useApp();
-    const { isPremium } = useSubscription();
     const [category, setCategory] = useState<"Supplement" | "Peptide" | "Compound">("Supplement");
     const [name, setName] = useState("");
     const [brand, setBrand] = useState("");
@@ -80,8 +78,7 @@ export function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
       item.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const limitReached = !isPremium && state.profile.currentStack.length >= 8;
-    const isSaveDisabled = !name || !dose || limitReached;
+    const isSaveDisabled = !name || !dose;
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {

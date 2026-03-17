@@ -45,15 +45,12 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useSubscriptionContext as useSubscription } from "@/hooks/SubscriptionContext";
-
 import { calculateWeeklyAdherence } from "@/lib/adherence";
 import { BioavailabilityCalculator } from "@/components/BioavailabilityCalculator";
 import { BloodworkAnalysisCard } from "@/components/BloodworkAnalysisCard";
 
 export function ProgressTab({ onShowPricing }: { onShowPricing?: () => void }) {
   const { state, dispatch } = useApp();
-  const { isPremium } = useSubscription();
   const [showAddBloodwork, setShowAddBloodwork] = useState(false);
   const [newBloodwork, setNewBloodwork] = useState<{
     date: string;
@@ -526,17 +523,11 @@ export function ProgressTab({ onShowPricing }: { onShowPricing?: () => void }) {
             <Activity className="w-5 h-5 text-teal" />
               <h3 className="font-medium dark:text-white">Symptom Analytics</h3>
           </div>
-          {isPremium && (
-            <span className="text-[9px] font-medium text-teal bg-teal/5 dark:bg-teal/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Premium</span>
-          )}
         </div>
 
         <div className="relative">
-          {/* Paywall card for free users */}
-          {!isPremium && (
             <div className="relative rounded-3xl overflow-hidden border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              {/* Blurred preview */}
-              <div className="p-5 space-y-3 select-none pointer-events-none blur-[3px] opacity-60">
+              <div className="p-5 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { label: "Energy", color: "text-amber-500", border: "border-amber-100 dark:border-amber-900/30", icon: Zap, val: "7.4" },
@@ -556,27 +547,10 @@ export function ProgressTab({ onShowPricing }: { onShowPricing?: () => void }) {
                 </div>
                 <div className="h-16 bg-zinc-50 dark:bg-zinc-800/40 rounded-2xl border border-zinc-100 dark:border-zinc-800" />
               </div>
-              {/* Clean paywall overlay */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-5">
-                <div className="w-10 h-10 rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm flex items-center justify-center">
-                  <Lock className="w-4 h-4 text-zinc-400" />
-                </div>
-                <div className="text-center space-y-0.5">
-                    <p className="text-sm font-medium text-zinc-800 dark:text-zinc-100">Symptom Analytics</p>
-                    <p className="text-xs text-zinc-400">Available with Premium</p>
-                </div>
-                <button
-                  onClick={() => onShowPricing?.()}
-                  className="mt-1 h-9 px-5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold rounded-xl hover:opacity-90 transition-all active:scale-95"
-                >
-                  Upgrade — $7.99/mo
-                </button>
-              </div>
             </div>
           )}
 
-          {/* Real content for premium users */}
-          {isPremium && (() => {
+          {(() => {
             const logs = state.symptomLogs || [];
             const types = ["Energy", "Mood", "Focus", "Sleep"] as const;
             const typeConfig = {
@@ -683,7 +657,7 @@ export function ProgressTab({ onShowPricing }: { onShowPricing?: () => void }) {
                 )}
               </div>
             );
-          })()}
+          })()
         </div>
       </div>
 

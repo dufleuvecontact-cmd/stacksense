@@ -2,26 +2,11 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useSubscriptionContext as useSubscription } from '@/hooks/SubscriptionContext';
-import { FullPagePaywall } from '@/components/PremiumUI';
 import { ProtocolDashboard } from '@/components/protocols/ProtocolDashboard';
 import { StartProtocolWizard } from '@/components/protocols/StartProtocolWizard';
 
 export function CyclesTab({ onShowPricing }: { onShowPricing?: () => void }) {
-  const { isPremium } = useSubscription();
-    const [showBuilder, setShowBuilder] = useState(false);
-    
-  if (!isPremium) {
-      return (
-            <div className="h-full bg-white dark:bg-slate-950 overflow-hidden">
-                    <FullPagePaywall
-                              title="Premium Access Required"
-                                        description="Upgrade to premium to unlock advanced protocol/cycle building."
-                                                  onUpgrade={() => onShowPricing?.()}
-                                                          />
-                                                                </div>
-                                                                    );
-                                                                      }
+  const [showBuilder, setShowBuilder] = useState(false);
                                                                       
   return (
       <div className="h-full overflow-y-auto bg-slate-50 dark:bg-zinc-950 pb-24 pt-[env(safe-area-inset-top,1rem)]">
