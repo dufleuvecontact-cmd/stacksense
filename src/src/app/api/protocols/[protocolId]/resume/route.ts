@@ -70,7 +70,7 @@ export async function POST(request: NextRequest, { params }: { params: { protoco
     await supabaseAdmin.from('dose_occurrences').insert(occurrences);
   }
 
-  console.log('[analytics] protocol_resumed', { userId: user.id, protocolId });
+  // TODO: analytics event
 
   return NextResponse.json({ ok: true });
 }

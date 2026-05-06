@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin, getAuthenticatedUser } from '@/lib/auth-server';
+import { supabaseAdmin, getAuthenticatedUser, rateLimit } from '@/lib/auth-server';
 
 const PREMATURE_HOURS_LIMIT = 4;
 
 export async function POST(request: NextRequest, { params }: { params: { doseId: string } }) {
+  const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
+  if (!(await rateLimit(`ratelimit:doselog:${ip}`))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const user = await getAuthenticatedUser(request);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -78,7 +83,7 @@ export async function POST(request: NextRequest, { params }: { params: { doseId:
     });
   }
 
-  console.log('[analytics] dose_logged', { userId: user.id, doseId, action });
+  console.log('[dose_logged]', { doseId, action });
 
   return NextResponse.json({ ok: true });
 }

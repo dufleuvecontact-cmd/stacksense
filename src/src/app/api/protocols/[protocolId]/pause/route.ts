@@ -28,7 +28,6 @@ export async function POST(request: NextRequest, { params }: { params: { protoco
   }
 
   // TODO: analytics event
-  console.log('[analytics] protocol_paused', { userId: user.id, protocolId });
 
   return NextResponse.json({ ok: true });
 }

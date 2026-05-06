@@ -6,8 +6,12 @@ import { Redis } from '@upstash/redis';
 /**
  * Verifies the Supabase JWT from the Authorization header.
  * Returns the authenticated user, or null if invalid/missing.
- * Uses the service-role client to call getUser() which validates against Supabase's auth server.
+ * Uses the anon client to call getUser() which validates against Supabase's auth server.
  */
+const anonUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+if (!anonUrl || !anonKey) throw new Error('Missing Supabase anon credentials');
+
 export async function getAuthenticatedUser(request: NextRequest): Promise<{ id: string; email: string } | null> {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) return null;
@@ -15,14 +19,9 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<{ id: 
   const token = authHeader.slice(7);
   if (!token) return null;
 
-  // Use a scoped anon client that verifies the JWT via Supabase Auth API
-  const supabaseAuth = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { global: { headers: { Authorization: `Bearer ${token}` } } }
-  );
-
-  const { data, error } = await supabaseAuth.auth.getUser(token);
+  const { data, error } = await createClient(anonUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  }).auth.getUser(token);
   if (error || !data?.user) return null;
 
   return { id: data.user.id, email: data.user.email! };

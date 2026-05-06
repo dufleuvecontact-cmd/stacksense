@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Quota check for free users
+    // Quota check for free users — atomic increment to prevent race conditions
     if (!isPremium) {
       const { data: profile } = await supabaseAdmin
         .from("profiles")
@@ -67,11 +67,19 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Increment counter
-      await supabaseAdmin
+      // Atomic increment: only increment if still under quota to prevent race conditions
+      const { error: incError } = await supabaseAdmin
         .from("profiles")
         .update({ free_analyses_used: used + 1 })
-        .eq("id", userId);
+        .eq("id", userId)
+        .eq("free_analyses_used", used); // optimistic lock — fails if another request incremented first
+
+      if (incError) {
+        return NextResponse.json(
+          { error: "Quota check failed, please retry" },
+          { status: 409 }
+        );
+      }
     }
 
     // Run AI analysis

@@ -35,6 +35,17 @@ export function Auth() {
     setLoading(true);
 
     try {
+      if (mode === "signup") {
+        if (password.length < 8) {
+          toast.error("Password must be at least 8 characters.");
+          return;
+        }
+        if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+          toast.error("Password must contain both letters and numbers.");
+          return;
+        }
+      }
+
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({
           email,

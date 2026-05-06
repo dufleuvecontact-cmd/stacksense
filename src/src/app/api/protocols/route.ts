@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin, getAuthenticatedUser } from '@/lib/auth-server';
+import { supabaseAdmin, getAuthenticatedUser, rateLimit } from '@/lib/auth-server';
 import { expandScheduleRules, DEFAULT_OCCURRENCE_WINDOW_DAYS } from '@/lib/protocol';
 
 const OCCURRENCE_WINDOW_DAYS = DEFAULT_OCCURRENCE_WINDOW_DAYS;
@@ -29,6 +29,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
+  if (!(await rateLimit(`ratelimit:protocols:${ip}`))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const user = await getAuthenticatedUser(request);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -159,9 +164,7 @@ export async function POST(request: NextRequest) {
     await supabaseAdmin.from('dose_occurrences').insert(occurrences);
   }
 
-  // capture analytics event
   // TODO: use real analytics integration
-  console.log('[analytics] protocol_created', { userId: user.id, protocolId });
 
   return NextResponse.json({ protocol: protocolData });
 }
