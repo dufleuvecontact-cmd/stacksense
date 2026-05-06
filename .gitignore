@@ -25,6 +25,9 @@
 *.pem
 
 # debug
+debug.log
+*.log
+.orchids/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
