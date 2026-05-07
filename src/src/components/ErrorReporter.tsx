@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import DOMPurify from "dompurify";
 
 type ReporterProps = {
   /*  ⎯⎯ props are only provided on the global-error page ⎯⎯ */
@@ -50,7 +51,7 @@ export default function ErrorReporter({ error, reset }: ReporterProps) {
         overlay?.querySelector(
           "h1, h2, .error-message, [data-nextjs-dialog-body]"
         ) ?? null;
-      const txt = node?.textContent ?? node?.innerHTML ?? "";
+      const txt = node?.textContent ?? (node?.innerHTML ? DOMPurify.sanitize(node.innerHTML) : "");
       if (txt && txt !== lastOverlayMsg.current) {
         lastOverlayMsg.current = txt;
         send({
