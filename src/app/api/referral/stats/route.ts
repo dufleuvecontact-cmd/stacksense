@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { randomBytes } from 'crypto';
 import { getAuthenticatedUserId, supabaseAdmin, rateLimit } from '@/lib/auth-server';
 
-/** Generate a cryptographically random, non-guessable referral code */
 function generateReferralCode(): string {
-  // 5 random bytes → 10 hex chars, uppercase. Collision probability negligible at scale.
-  return randomBytes(5).toString('hex').toUpperCase();
+  const array = new Uint8Array(5);
+  crypto.getRandomValues(array);
+  return Array.from(array)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
 }
 
 export async function GET(request: NextRequest) {
@@ -47,11 +49,15 @@ export async function GET(request: NextRequest) {
         .maybeSingle();
 
       if (!conflict) {
-        await supabaseAdmin
+        const { error: upsertError } = await supabaseAdmin
           .from('profiles')
-          .update({ referral_code: candidate })
-          .eq('id', userId);
-        referralCode = candidate;
+          .upsert({ id: userId, referral_code: candidate }, { onConflict: 'id' });
+        
+        if (upsertError) {
+          console.error('Failed to upsert referral code:', upsertError);
+        } else {
+          referralCode = candidate;
+        }
       }
       attempts++;
     }
@@ -85,7 +91,14 @@ export async function GET(request: NextRequest) {
       .select('id, email')
       .in('id', referredIds);
 
-    const emailMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p.email as string | null]));
+    const emailMap = Object.fromEntries((profiles ?? []).map((p) => {
+      let masked = p.email as string | null;
+      if (masked && masked.includes('@')) {
+        const [local, domain] = masked.split('@');
+        masked = `${local.charAt(0)}***@${domain}`;
+      }
+      return [p.id, masked];
+    }));
     enriched = rows.map((r) => ({ ...r, referred_email: emailMap[r.referred_id] ?? null }));
   }
 

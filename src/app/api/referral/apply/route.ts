@@ -87,8 +87,7 @@ export async function POST(request: NextRequest) {
   // Record referred_by on the new user's profile
   await supabaseAdmin
     .from('profiles')
-    .update({ referred_by: referrer.id })
-    .eq('id', newUserId);
+    .upsert({ id: newUserId, referred_by: referrer.id }, { onConflict: 'id' });
 
   return NextResponse.json({ ok: true });
 }
